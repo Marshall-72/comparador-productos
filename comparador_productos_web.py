@@ -40,3 +40,4 @@ if uploaded_files and len(uploaded_files) == 4:
 
 else:
     st.warning("Por favor sube exactamente 4 archivos Excel con formato: Propiedad | Valor.")
+
