@@ -1,11 +1,11 @@
 import pandas as pd
 import streamlit as st
 
-st.title("Comparador de Propiedades Físico-Químicas entre Productos")
+st.title("🔬 Comparador de Propiedades Físico-Químicas entre Productos")
 
 st.markdown("""
 Sube las tablas de los **4 productos** en formato Excel.  
-Cada archivo debe tener una tabla con propiedades como columnas (por ejemplo: Densidad, pH, Color, etc.).
+Cada archivo debe tener dos columnas: **Propiedad** y **Valor**.
 """)
 
 # Subida de archivos
@@ -14,31 +14,29 @@ uploaded_files = st.file_uploader("Sube los archivos Excel:", type=["xlsx"], acc
 if uploaded_files and len(uploaded_files) == 4:
     productos = {}
     for i, file in enumerate(uploaded_files):
-        nombre_producto = f"Producto {chr(65+i)}"  # Producto A, B, C, D
+        nombre_producto = f"Producto {chr(65 + i)}"  # Producto A, B, C, D
         df = pd.read_excel(file)
         productos[nombre_producto] = df
 
-    # Unir los dataframes
-    def unir_productos(diccionario_productos):
-        df_unido = pd.DataFrame()
-        for nombre, df in diccionario_productos.items():
-            df_temp = df.copy()
-            df_temp["Producto"] = nombre
-            df_unido = pd.concat([df_unido, df_temp], ignore_index=True)
-        return df_unido
-
-    df_productos = unir_productos(productos)
-
-    # Selección de propiedad
-    propiedades_disponibles = [col for col in df_productos.columns if col != "Producto"]
-    propiedad_seleccionada = st.selectbox("Selecciona la propiedad a comparar:", propiedades_disponibles)
+    # Obtener lista única de propiedades disponibles
+    todas_propiedades = pd.concat([df["Propiedad"] for df in productos.values()]).unique()
+    propiedad_seleccionada = st.selectbox("Selecciona la propiedad a comparar:", sorted(todas_propiedades))
 
     if st.button("Comparar"):
-        comparativa = df_productos[["Producto", propiedad_seleccionada]].drop_duplicates()
-        comparativa = comparativa.sort_values("Producto")
+        resultados = []
 
-        st.subheader(f"Comparativa de '{propiedad_seleccionada}' entre productos:")
-        st.dataframe(comparativa.reset_index(drop=True))
+        for nombre, df in productos.items():
+            fila = df[df["Propiedad"] == propiedad_seleccionada]
+            if not fila.empty:
+                valor = fila["Valor"].values[0]
+            else:
+                valor = "No disponible"
+            resultados.append({"Producto": nombre, "Valor": valor})
+
+        comparativa = pd.DataFrame(resultados)
+
+        st.subheader(f"📊 Comparativa de '{propiedad_seleccionada}' entre productos:")
+        st.dataframe(comparativa)
 
 else:
-    st.warning("Por favor sube exactamente 4 archivos Excel.")
+    st.warning("Por favor sube exactamente 4 archivos Excel con formato: Propiedad | Valor.")
