@@ -49,6 +49,15 @@ if uploaded_files and len(uploaded_files) == 4:
 
             st.subheader(f"📊 Comparativa de '{propiedad_seleccionada}' entre productos:")
             st.dataframe(comparativa)
+
+            # Intentar convertir a número para graficar si es posible
+            comparativa["Valor_Numérico"] = pd.to_numeric(comparativa["Valor"], errors="coerce")
+
+            if comparativa["Valor_Numérico"].notna().sum() >= 2:
+                st.subheader("📈 Gráfico comparativo")
+                st.bar_chart(comparativa.set_index("Producto")["Valor_Numérico"])
+            else:
+                st.info("ℹ️ No se puede generar un gráfico porque la mayoría de los valores no son numéricos.")
     else:
         if texto_busqueda:
             st.warning("No se encontraron propiedades que coincidan.")
